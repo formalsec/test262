@@ -24,3 +24,8 @@ To launch the Test262 workflow on GitHub, through the command line use:
 ```sh
 gh workflow run test262.yml
 ```
+
+## Some Notes
+
+Em standby (classes ainda não definidas):
+- bench/test262/tests/built-ins/Symbol/species/subclassing.js
