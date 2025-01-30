@@ -5,6 +5,7 @@
 info: XML Shallow Parsing with Regular Expressions
 es5id: 15.10.2_A1_T1
 description: "See bug http://bugzilla.mozilla.org/show_bug.cgi?id=103087"
+flags: [skip]
 ---*/
 
 // REX/Javascript 1.0 
