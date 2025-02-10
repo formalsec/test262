@@ -2,164 +2,166 @@ var NotEarlyErrorString = "NotEarlyError";
 var EarlyErrorRePat = "^((?!" + NotEarlyErrorString + ").)*$";
 var NotEarlyError = new Error(NotEarlyErrorString);
 
-function Test262Error(message) {
-    this.message = message || "";
-    //console.setInternalClass(this, "Error")
-    //console.setInternalName(this, "Test262Error")
+class Test262Error extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "Test262Error";
+  }
+
+  toString() {
+    return "Test262Error: " + this.message;
+  }
+
 }
 
-Test262Error.prototype.toString = function () {
-    return "Test262Error: " + this.message;
+Test262Error.thrower = function(message) {
+  throw new Test262Error(message);
 };
 
-Test262Error.thrower = function (message) /* TODO: => */ {
-    throw new Test262Error(message);
-};
-  
 function $DONOTEVALUATE() {
-    throw "Test262: This statement should not be evaluated.";
+  throw "Test262: This statement should not be evaluated.";
 };
 
 var $ERROR;
 $ERROR = function $ERROR(message) {
-    throw new Test262Error(message);
+  throw new Test262Error(message);
 };
 
 function testFailed(message) {
-    $ERROR(message);
+  $ERROR(message);
 }
 
 /* @id harnessAssert */
 function assert(mustBeTrue, message) {
-    if (mustBeTrue === true) {
-        return;
-    }
+  if (mustBeTrue === true) {
+    return;
+  }
 
-    if (message === undefined) {
-        message = 'Expected true but got ' + String(mustBeTrue);
-    }
-    $ERROR(message);
+  if (message === undefined) {
+    message = 'Expected true but got ' + String(mustBeTrue);
+  }
+  $ERROR(message);
 }
 
 /* @id harnessIsSameValue */
-assert._isSameValue = function (a, b) {
-    if (a === b) {
-        // Handle +/-0 vs. -/+0
-        return a !== 0 || 1 / a === 1 / b;
-    }
+assert._isSameValue = function(a, b) {
+  if (a === b) {
+    // Handle +/-0 vs. -/+0
+    return a !== 0 || 1 / a === 1 / b;
+  }
 
-    // Handle NaN vs. NaN
-    return a !== a && b !== b;
+  // Handle NaN vs. NaN
+  return a !== a && b !== b;
 };
 
 /* @id harnessSameValue */
-assert.sameValue = function (actual, expected, message) {
-    if (assert._isSameValue(actual, expected)) {
-        return;
-    }
+assert.sameValue = function(actual, expected, message) {
+  if (assert._isSameValue(actual, expected)) {
+    return;
+  }
 
-    if (message === undefined) {
-        message = '';
-    } else {
-        message += ' ';
-    }
+  if (message === undefined) {
+    message = '';
+  } else {
+    message += ' ';
+  }
 
-    message += 'Expected SameValue(<<' + String(actual) + '>>, <<' + String(expected) + '>>) to be true';
+  message += 'Expected SameValue(<<' + String(actual) + '>>, <<' + String(expected) + '>>) to be true';
 
-    $ERROR(message);
+  $ERROR(message);
 };
 
 /* @id harnessNotSameValue */
-assert.notSameValue = function (actual, unexpected, message) {
-    if (!assert._isSameValue(actual, unexpected)) {
-        return;
-    }
+assert.notSameValue = function(actual, unexpected, message) {
+  if (!assert._isSameValue(actual, unexpected)) {
+    return;
+  }
 
-    if (message === undefined) {
-        message = '';
-    } else {
-        message += ' ';
-    }
+  if (message === undefined) {
+    message = '';
+  } else {
+    message += ' ';
+  }
 
-    message += 'Expected SameValue(<<' + String(actual) + '>>, <<' + String(unexpected) + '>>) to be false';
+  message += 'Expected SameValue(<<' + String(actual) + '>>, <<' + String(unexpected) + '>>) to be false';
 
-    $ERROR(message);
+  $ERROR(message);
 };
 
 /* @id harnessThrows */
-assert.throws = function (expectedErrorConstructor, func, message) {
-    if (typeof func !== "function") {
-        $ERROR('assert.throws requires two arguments: the error constructor ' +
-            'and a function to run');
-        return;
-    }
-    if (message === undefined) {
-        message = '';
-    } else {
-        message += ' ';
-    }
+assert.throws = function(expectedErrorConstructor, func, message) {
+  if (typeof func !== "function") {
+    $ERROR('assert.throws requires two arguments: the error constructor ' +
+      'and a function to run');
+    return;
+  }
+  if (message === undefined) {
+    message = '';
+  } else {
+    message += ' ';
+  }
 
-    try {
-        func();
-    } catch (thrown) {
-        if (typeof thrown !== 'object' || thrown === null) {
-            message += 'Thrown value was not an object!';
-            $ERROR(message);
-        } else if (thrown.constructor !== expectedErrorConstructor) {
-            message += 'Expected a ' + expectedErrorConstructor.name + ' but got a ' + thrown.constructor.name;
-            $ERROR(message);
-        }
-        return;
+  try {
+    func();
+  } catch (thrown) {
+    if (typeof thrown !== 'object' || thrown === null) {
+      message += 'Thrown value was not an object!';
+      $ERROR(message);
+    } else if (thrown.constructor !== expectedErrorConstructor) {
+      message += 'Expected a ' + expectedErrorConstructor.name + ' but got a ' + thrown.constructor.name;
+      $ERROR(message);
     }
+    return;
+  }
 
-    message += 'Expected a ' + expectedErrorConstructor.name + ' to be thrown but no exception was thrown at all';
-    $ERROR(message);
+  message += 'Expected a ' + expectedErrorConstructor.name + ' to be thrown but no exception was thrown at all';
+  $ERROR(message);
 };
 
 /* @id harnessIsConfigurable */
 function isConfigurable(obj, name) {
-    var hasOwnProperty = Object.prototype.hasOwnProperty;
-    try {
-        delete obj[name];
-    } catch (e) {
-        if (!(e instanceof TypeError)) {
-            $ERROR("Expected TypeError, got " + e);
-        }
+  var hasOwnProperty = Object.prototype.hasOwnProperty;
+  try {
+    delete obj[name];
+  } catch (e) {
+    if (!(e instanceof TypeError)) {
+      $ERROR("Expected TypeError, got " + e);
     }
-    return !hasOwnProperty.call(obj, name);
+  }
+  return !hasOwnProperty.call(obj, name);
 }
 
 function isEnumerable(obj, name) {
-    var stringCheck = false;
-  
-    if (typeof name === "string") {
-        for (var x in obj) {
-            if (x === name) {
-                stringCheck = true;
-                break;
-            }
-        }
-    } else {
-        // skip it if name is not string, works for Symbol names.
+  var stringCheck = false;
+
+  if (typeof name === "string") {
+    for (var x in obj) {
+      if (x === name) {
         stringCheck = true;
+        break;
+      }
     }
-  
-    return stringCheck &&
-        Object.prototype.hasOwnProperty.call(obj, name) &&
-        Object.prototype.propertyIsEnumerable.call(obj, name);
+  } else {
+    // skip it if name is not string, works for Symbol names.
+    stringCheck = true;
+  }
+
+  return stringCheck &&
+    Object.prototype.hasOwnProperty.call(obj, name) &&
+    Object.prototype.propertyIsEnumerable.call(obj, name);
 }
 
 function isSameValue(a, b) {
-    if (a === 0 && b === 0) return 1 / a === 1 / b;
-    if (a !== a && b !== b) return true;
-  
-    return a === b;
+  if (a === 0 && b === 0) return 1 / a === 1 / b;
+  if (a !== a && b !== b) return true;
+
+  return a === b;
 }
 
 function isEqualTo(obj, name, expectedValue) {
-    var actualValue = obj[name];
+  var actualValue = obj[name];
 
-    return assert._isSameValue(actualValue, expectedValue);
+  return assert._isSameValue(actualValue, expectedValue);
 }
 
 var __isArray = Array.isArray;
@@ -197,135 +199,132 @@ function isWritable(obj, name, verifyProp, value) {
 }
 
 function verifyEqualTo(obj, name, value) {
-    if (!isEqualTo(obj, name, value)) {
-        $ERROR("Expected obj[" + String(name) + "] to equal " + value +
-                   ", actually " + obj[name]);
-    }
+  if (!isEqualTo(obj, name, value)) {
+    $ERROR("Expected obj[" + String(name) + "] to equal " + value +
+      ", actually " + obj[name]);
+  }
 }
 
 function verifyWritable(obj, name, verifyProp, value) {
-    if (!verifyProp) {
-        assert(Object.getOwnPropertyDescriptor(obj, name).writable,
-               "Expected obj[" + String(name) + "] to have writable:true.");
-    }
-    if (!isWritable(obj, name, verifyProp, value)) {
-        $ERROR("Expected obj[" + String(name) + "] to be writable, but was not.");
-    }
+  if (!verifyProp) {
+    assert(Object.getOwnPropertyDescriptor(obj, name).writable,
+      "Expected obj[" + String(name) + "] to have writable:true.");
+  }
+  if (!isWritable(obj, name, verifyProp, value)) {
+    $ERROR("Expected obj[" + String(name) + "] to be writable, but was not.");
+  }
 }
 
 function verifyNotWritable(obj, name, verifyProp, value) {
-    if (!verifyProp) {
-        assert(!Object.getOwnPropertyDescriptor(obj, name).writable,
-               "Expected obj[" + String(name) + "] to have writable:false.");
-    }
-    if (isWritable(obj, name, verifyProp)) {
-        $ERROR("Expected obj[" + String(name) + "] NOT to be writable, but was.");
-    }
+  if (!verifyProp) {
+    assert(!Object.getOwnPropertyDescriptor(obj, name).writable,
+      "Expected obj[" + String(name) + "] to have writable:false.");
+  }
+  if (isWritable(obj, name, verifyProp)) {
+    $ERROR("Expected obj[" + String(name) + "] NOT to be writable, but was.");
+  }
 }
 
 function verifyEnumerable(obj, name) {
-    assert(Object.getOwnPropertyDescriptor(obj, name).enumerable,
-           "Expected obj[" + String(name) + "] to have enumerable:true.");
-    if (!isEnumerable(obj, name)) {
-        $ERROR("Expected obj[" + String(name) + "] to be enumerable, but was not.");
-    }
+  assert(Object.getOwnPropertyDescriptor(obj, name).enumerable,
+    "Expected obj[" + String(name) + "] to have enumerable:true.");
+  if (!isEnumerable(obj, name)) {
+    $ERROR("Expected obj[" + String(name) + "] to be enumerable, but was not.");
+  }
 }
 
 function verifyNotEnumerable(obj, name) {
-    assert(!Object.getOwnPropertyDescriptor(obj, name).enumerable,
-           "Expected obj[" + String(name) + "] to have enumerable:false.");
-    if (isEnumerable(obj, name)) {
-        $ERROR("Expected obj[" + String(name) + "] NOT to be enumerable, but was.");
-    }
+  assert(!Object.getOwnPropertyDescriptor(obj, name).enumerable,
+    "Expected obj[" + String(name) + "] to have enumerable:false.");
+  if (isEnumerable(obj, name)) {
+    $ERROR("Expected obj[" + String(name) + "] NOT to be enumerable, but was.");
+  }
 }
 
 function verifyConfigurable(obj, name) {
-    assert(Object.getOwnPropertyDescriptor(obj, name).configurable,
-           "Expected obj[" + String(name) + "] to have configurable:true.");
-    if (!isConfigurable(obj, name)) {
-        $ERROR("Expected obj[" + String(name) + "] to be configurable, but was not.");
-    }
+  assert(Object.getOwnPropertyDescriptor(obj, name).configurable,
+    "Expected obj[" + String(name) + "] to have configurable:true.");
+  if (!isConfigurable(obj, name)) {
+    $ERROR("Expected obj[" + String(name) + "] to be configurable, but was not.");
+  }
 }
 
 function verifyNotConfigurable(obj, name) {
-    assert(!Object.getOwnPropertyDescriptor(obj, name).configurable,
-           "Expected obj[" + String(name) + "] to have configurable:false.");
-    if (isConfigurable(obj, name)) {
-        $ERROR("Expected obj[" + String(name) + "] NOT to be configurable, but was.");
-    }
+  assert(!Object.getOwnPropertyDescriptor(obj, name).configurable,
+    "Expected obj[" + String(name) + "] to have configurable:false.");
+  if (isConfigurable(obj, name)) {
+    $ERROR("Expected obj[" + String(name) + "] NOT to be configurable, but was.");
+  }
 }
 
 function getPrecision(num) {
-	//TODO: Create a table of prec's,
-	//      because using Math for testing Math isn't that correct.
+  //TODO: Create a table of prec's,
+  //      because using Math for testing Math isn't that correct.
 
-	var log2num = Math.log(Math.abs(num)) / Math.LN2;
-	var pernum = Math.ceil(log2num);
-	return 2 * Math.pow(2, -52 + pernum);
+  var log2num = Math.log(Math.abs(num)) / Math.LN2;
+  var pernum = Math.ceil(log2num);
+  return 2 * Math.pow(2, -52 + pernum);
 }
 
 var prec;
 
-function isEqual(num1, num2)
-{
-        if ((num1 === Infinity)&&(num2 === Infinity))
-        {
-                return(true);
-        }
-        if ((num1 === -Infinity)&&(num2 === -Infinity))
-        {
-                return(true);
-        }
-        prec = getPrecision(Math.min(Math.abs(num1), Math.abs(num2)));
-        return(Math.abs(num1 - num2) <= prec);
-        //return(num1 === num2);
+function isEqual(num1, num2) {
+  if ((num1 === Infinity) && (num2 === Infinity)) {
+    return (true);
+  }
+  if ((num1 === -Infinity) && (num2 === -Infinity)) {
+    return (true);
+  }
+  prec = getPrecision(Math.min(Math.abs(num1), Math.abs(num2)));
+  return (Math.abs(num1 - num2) <= prec);
+  //return(num1 === num2);
 }
 
 var $MAX_ITERATIONS = 100000;
 
 function arrayContains(arr, expected) {
-    var found;
-    for (var i = 0; i < expected.length; i++) {
-        found = false;
-        for (var j = 0; j < arr.length; j++) {
-            if (expected[i] === arr[j]) {
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            return false;
-        }
+  var found;
+  for (var i = 0; i < expected.length; i++) {
+    found = false;
+    for (var j = 0; j < arr.length; j++) {
+      if (expected[i] === arr[j]) {
+        found = true;
+        break;
+      }
     }
-    return true;
+    if (!found) {
+      return false;
+    }
+  }
+  return true;
 }
 
-function compareArray (a, b) {
-    if (b.length !== a.length) {
-        return false;
-    }
+function compareArray(a, b) {
+  if (b.length !== a.length) {
+    return false;
+  }
 
-    for (var i = 0; i < a.length; i++) {
-        if (b[i] !== a[i]) {
-            return false;
-        }
+  for (var i = 0; i < a.length; i++) {
+    if (b[i] !== a[i]) {
+      return false;
     }
-    return true;
+  }
+  return true;
 }
 
 assert.compareArray = compareArray;
 
 function assertRelativeDateMs(date, expectedMs) {
-	  var actualMs = date.valueOf();
-	  var localOffset = date.getTimezoneOffset() * 60000;
+  var actualMs = date.valueOf();
+  var localOffset = date.getTimezoneOffset() * 60000;
 
-	  if (actualMs - localOffset !== expectedMs) {
-	    $ERROR(
-	      'Expected ' + date + ' to be ' + expectedMs +
-	      ' milliseconds from the Unix epoch, instead of ' + (actualMs - localOffset)
-	    );
-	  }
-	}
+  if (actualMs - localOffset !== expectedMs) {
+    $ERROR(
+      'Expected ' + date + ' to be ' + expectedMs +
+      ' milliseconds from the Unix epoch, instead of ' + (actualMs - localOffset)
+    );
+  }
+}
 
 var HoursPerDay = 24;
 var MinutesPerHour = 60;
@@ -347,88 +346,88 @@ var date_2099_end = 4102444799999;
 var date_2100_start = 4102444800000;
 
 function verifyProperty(obj, name, desc, options) {
-    assert(
-        arguments.length > 2,
-        'verifyProperty should receive at least 3 arguments: obj, name, and descriptor'
-    );
+  assert(
+    arguments.length > 2,
+    'verifyProperty should receive at least 3 arguments: obj, name, and descriptor'
+  );
 
-    var originalDesc = Object.getOwnPropertyDescriptor(obj, name);
-    var nameStr = String(name);
+  var originalDesc = Object.getOwnPropertyDescriptor(obj, name);
+  var nameStr = String(name);
 
-    // Allows checking for undefined descriptor if it's explicitly given.
-    if (desc === undefined) {
-        assert.sameValue(
-        originalDesc,
-        undefined,
-        "obj['" + nameStr + "'] descriptor should be undefined"
-        );
-
-        // desc and originalDesc are both undefined, problem solved;
-        return true;
-    }
-
-    assert(
-        Object.prototype.hasOwnProperty.call(obj, name),
-        "obj should have an own property " + nameStr
-    );
-
-    assert.notSameValue(
-        desc,
-        null,
-        "The desc argument should be an object or undefined, null"
-    );
-
+  // Allows checking for undefined descriptor if it's explicitly given.
+  if (desc === undefined) {
     assert.sameValue(
-        typeof desc,
-        "object",
-        "The desc argument should be an object or undefined, " + String(desc)
+      originalDesc,
+      undefined,
+      "obj['" + nameStr + "'] descriptor should be undefined"
     );
 
-    var failures = [];
-
-    if (Object.prototype.hasOwnProperty.call(desc, 'value')) {
-        /* changed to isSameValue to assert._isSameValue */
-        if (!assert._isSameValue(desc.value, originalDesc.value)) {
-        failures.push("descriptor value should be " + desc.value);
-        }
-    }
-
-    if (Object.prototype.hasOwnProperty.call(desc, 'enumerable')) {
-        if (desc.enumerable !== originalDesc.enumerable ||
-            desc.enumerable !== isEnumerable(obj, name)) {
-        failures.push('descriptor should ' + (desc.enumerable ? '' : 'not ') + 'be enumerable');
-        }
-    }
-
-    if (Object.prototype.hasOwnProperty.call(desc, 'writable')) {
-        if (desc.writable !== originalDesc.writable ||
-            desc.writable !== isWritable(obj, name)) {
-        failures.push('descriptor should ' + (desc.writable ? '' : 'not ') + 'be writable');
-        }
-    }
-
-    if (Object.prototype.hasOwnProperty.call(desc, 'configurable')) {
-        if (desc.configurable !== originalDesc.configurable ||
-            desc.configurable !== isConfigurable(obj, name)) {
-        failures.push('descriptor should ' + (desc.configurable ? '' : 'not ') + 'be configurable');
-        }
-    }
-
-    assert(!failures.length, failures.join('; '));
-
-    if (options && options.restore) {
-        Object.defineProperty(obj, name, originalDesc);
-    }
-
+    // desc and originalDesc are both undefined, problem solved;
     return true;
+  }
+
+  assert(
+    Object.prototype.hasOwnProperty.call(obj, name),
+    "obj should have an own property " + nameStr
+  );
+
+  assert.notSameValue(
+    desc,
+    null,
+    "The desc argument should be an object or undefined, null"
+  );
+
+  assert.sameValue(
+    typeof desc,
+    "object",
+    "The desc argument should be an object or undefined, " + String(desc)
+  );
+
+  var failures = [];
+
+  if (Object.prototype.hasOwnProperty.call(desc, 'value')) {
+    /* changed to isSameValue to assert._isSameValue */
+    if (!assert._isSameValue(desc.value, originalDesc.value)) {
+      failures.push("descriptor value should be " + desc.value);
+    }
+  }
+
+  if (Object.prototype.hasOwnProperty.call(desc, 'enumerable')) {
+    if (desc.enumerable !== originalDesc.enumerable ||
+      desc.enumerable !== isEnumerable(obj, name)) {
+      failures.push('descriptor should ' + (desc.enumerable ? '' : 'not ') + 'be enumerable');
+    }
+  }
+
+  if (Object.prototype.hasOwnProperty.call(desc, 'writable')) {
+    if (desc.writable !== originalDesc.writable ||
+      desc.writable !== isWritable(obj, name)) {
+      failures.push('descriptor should ' + (desc.writable ? '' : 'not ') + 'be writable');
+    }
+  }
+
+  if (Object.prototype.hasOwnProperty.call(desc, 'configurable')) {
+    if (desc.configurable !== originalDesc.configurable ||
+      desc.configurable !== isConfigurable(obj, name)) {
+      failures.push('descriptor should ' + (desc.configurable ? '' : 'not ') + 'be configurable');
+    }
+  }
+
+  assert(!failures.length, failures.join('; '));
+
+  if (options && options.restore) {
+    Object.defineProperty(obj, name, originalDesc);
+  }
+
+  return true;
 }
 
 
 function $DETACHBUFFER(buffer) {
-    if (!$262 || typeof $262.detachArrayBuffer !== "function") {
-        throw new Test262Error("No method available to detach an ArrayBuffer");
-    }
-    $262.detachArrayBuffer(buffer);
+  if (!$262 || typeof $262.detachArrayBuffer !== "function") {
+    throw new Test262Error("No method available to detach an ArrayBuffer");
+  }
+  $262.detachArrayBuffer(buffer);
 }
 
 
@@ -452,25 +451,25 @@ defines:
  * Array containing every typed array constructor.
  */
 var typedArrayConstructors = [
-    Float64Array,
-    Float32Array,
-    Int32Array,
-    Int16Array,
-    Int8Array,
-    Uint32Array,
-    Uint16Array,
-    Uint8Array,
-    Uint8ClampedArray
+  Float64Array,
+  Float32Array,
+  Int32Array,
+  Int16Array,
+  Int8Array,
+  Uint32Array,
+  Uint16Array,
+  Uint8Array,
+  Uint8ClampedArray
 ];
-  
+
 var floatArrayConstructors = typedArrayConstructors.slice(0, 2);
 var intArrayConstructors = typedArrayConstructors.slice(2, 7);
-  
+
 /**
  * The %TypedArray% intrinsic constructor function.
  */
 var TypedArray = Object.getPrototypeOf(Int8Array);
-  
+
 /**
  * Callback for testing a typed array constructor.
  *
@@ -485,18 +484,18 @@ var TypedArray = Object.getPrototypeOf(Int8Array);
  * @param {Array} selected - An optional Array with filtered typed arrays
  */
 function testWithTypedArrayConstructors(f, selected) {
-    var constructors = selected || typedArrayConstructors;
-    for (var i = 0; i < constructors.length; ++i) {
-        var constructor = constructors[i];
-        try {
-            f(constructor);
-        } catch (e) {
-            e.message += " (Testing with " + constructor.name + ".)";
-            throw e;
-        }
+  var constructors = selected || typedArrayConstructors;
+  for (var i = 0; i < constructors.length; ++i) {
+    var constructor = constructors[i];
+    try {
+      f(constructor);
+    } catch (e) {
+      e.message += " (Testing with " + constructor.name + ".)";
+      throw e;
     }
+  }
 }
-  
+
 /**
  * Calls the provided function for every non-"Atomics Friendly" typed array constructor.
  *
@@ -504,13 +503,13 @@ function testWithTypedArrayConstructors(f, selected) {
  * @param {Array} selected - An optional Array with filtered typed arrays
  */
 function testWithNonAtomicsFriendlyTypedArrayConstructors(f) {
-    testWithTypedArrayConstructors(f, [
-        Float64Array,
-        Float32Array,
-        Uint8ClampedArray
-    ]);
+  testWithTypedArrayConstructors(f, [
+    Float64Array,
+    Float32Array,
+    Uint8ClampedArray
+  ]);
 }
-  
+
 /**
  * Calls the provided function for every "Atomics Friendly" typed array constructor.
  *
@@ -518,16 +517,16 @@ function testWithNonAtomicsFriendlyTypedArrayConstructors(f) {
  * @param {Array} selected - An optional Array with filtered typed arrays
  */
 function testWithAtomicsFriendlyTypedArrayConstructors(f) {
-    testWithTypedArrayConstructors(f, [
-        Int32Array,
-        Int16Array,
-        Int8Array,
-        Uint32Array,
-        Uint16Array,
-        Uint8Array,
-    ]);
+  testWithTypedArrayConstructors(f, [
+    Int32Array,
+    Int16Array,
+    Int8Array,
+    Uint32Array,
+    Uint16Array,
+    Uint8Array,
+  ]);
 }
-  
+
 /**
  * Helper for conversion operations on TypedArrays, the expected values
  * properties are indexed in order to match the respective value for each
@@ -538,21 +537,21 @@ function testWithAtomicsFriendlyTypedArrayConstructors(f) {
  *                         a false positive with an equivalent expected value.
  */
 function testTypedArrayConversions(byteConversionValues, fn, selected) {
-    var values = byteConversionValues.values;
-    var expected = byteConversionValues.expected;
+  var values = byteConversionValues.values;
+  var expected = byteConversionValues.expected;
 
-    testWithTypedArrayConstructors(function(TA) {
-        var name = TA.name.slice(0, -5);
+  testWithTypedArrayConstructors(function(TA) {
+    var name = TA.name.slice(0, -5);
 
-        return values.forEach(function(value, index) {
-            var exp = expected[name][index];
-            var initial = 0;
-            if (exp === 0) {
-                initial = 1;
-            }
-            fn(TA, value, exp, initial);
-        });
-    }, selected);
+    return values.forEach(function(value, index) {
+      var exp = expected[name][index];
+      var initial = 0;
+      if (exp === 0) {
+        initial = 1;
+      }
+      fn(TA, value, exp, initial);
+    });
+  }, selected);
 }
 
 /*---
@@ -562,460 +561,460 @@ defines: [isConstructor]
 ---*/
 
 function isConstructor(f) {
-    try {
-        Reflect.construct(function(){}, [], f);
-    } catch (e) {
-        return false;
-    }
-    return true;
+  try {
+    Reflect.construct(function() { }, [], f);
+  } catch (e) {
+    return false;
+  }
+  return true;
 }
 
 var NaNs = [
-    NaN,
-    Number.NaN,
-    NaN * 0,
-    0/0,
-    Infinity/Infinity,
-    -(0/0),
-    Math.pow(-1, 0.5),
-    -Math.pow(-1, 0.5),
-    Number("Not-a-Number"),
+  NaN,
+  Number.NaN,
+  NaN * 0,
+  0 / 0,
+  Infinity / Infinity,
+  -(0 / 0),
+  Math.pow(-1, 0.5),
+  -Math.pow(-1, 0.5),
+  Number("Not-a-Number"),
 ];
 
 var byteConversionValues = {
-    values: [
-        127,         // 2 ** 7 - 1
-        128,         // 2 ** 7
-        32767,       // 2 ** 15 - 1
-        32768,       // 2 ** 15
-        2147483647,  // 2 ** 31 - 1
-        2147483648,  // 2 ** 31
-        255,         // 2 ** 8 - 1
-        256,         // 2 ** 8
-        65535,       // 2 ** 16 - 1
-        65536,       // 2 ** 16
-        4294967295,  // 2 ** 32 - 1
-        4294967296,  // 2 ** 32
-        9007199254740991, // 2 ** 53 - 1
-        9007199254740992, // 2 ** 53
-        1.1,
-        0.1,
-        0.5,
-        0.50000001,
-        0.6,
-        0.7,
-        undefined,
-        -1,
-        -0,
-        -0.1,
-        -1.1,
-        NaN,
-        -127,        // - ( 2 ** 7 - 1 )
-        -128,        // - ( 2 ** 7 )
-        -32767,      // - ( 2 ** 15 - 1 )
-        -32768,      // - ( 2 ** 15 )
-        -2147483647, // - ( 2 ** 31 - 1 )
-        -2147483648, // - ( 2 ** 31 )
-        -255,        // - ( 2 ** 8 - 1 )
-        -256,        // - ( 2 ** 8 )
-        -65535,      // - ( 2 ** 16 - 1 )
-        -65536,      // - ( 2 ** 16 )
-        -4294967295, // - ( 2 ** 32 - 1 )
-        -4294967296, // - ( 2 ** 32 )
-        Infinity,
-        -Infinity,
-        0
-    ],
+  values: [
+    127,         // 2 ** 7 - 1
+    128,         // 2 ** 7
+    32767,       // 2 ** 15 - 1
+    32768,       // 2 ** 15
+    2147483647,  // 2 ** 31 - 1
+    2147483648,  // 2 ** 31
+    255,         // 2 ** 8 - 1
+    256,         // 2 ** 8
+    65535,       // 2 ** 16 - 1
+    65536,       // 2 ** 16
+    4294967295,  // 2 ** 32 - 1
+    4294967296,  // 2 ** 32
+    9007199254740991, // 2 ** 53 - 1
+    9007199254740992, // 2 ** 53
+    1.1,
+    0.1,
+    0.5,
+    0.50000001,
+    0.6,
+    0.7,
+    undefined,
+    -1,
+    -0,
+    -0.1,
+    -1.1,
+    NaN,
+    -127,        // - ( 2 ** 7 - 1 )
+    -128,        // - ( 2 ** 7 )
+    -32767,      // - ( 2 ** 15 - 1 )
+    -32768,      // - ( 2 ** 15 )
+    -2147483647, // - ( 2 ** 31 - 1 )
+    -2147483648, // - ( 2 ** 31 )
+    -255,        // - ( 2 ** 8 - 1 )
+    -256,        // - ( 2 ** 8 )
+    -65535,      // - ( 2 ** 16 - 1 )
+    -65536,      // - ( 2 ** 16 )
+    -4294967295, // - ( 2 ** 32 - 1 )
+    -4294967296, // - ( 2 ** 32 )
+    Infinity,
+    -Infinity,
+    0
+  ],
 
-    expected: {
-        Int8: [
-            127,  // 127
-            -128, // 128
-            -1,   // 32767
-            0,    // 32768
-            -1,   // 2147483647
-            0,    // 2147483648
-            -1,   // 255
-            0,    // 256
-            -1,   // 65535
-            0,    // 65536
-            -1,   // 4294967295
-            0,    // 4294967296
-            -1,   // 9007199254740991
-            0,    // 9007199254740992
-            1,    // 1.1
-            0,    // 0.1
-            0,    // 0.5
-            0,    // 0.50000001,
-            0,    // 0.6
-            0,    // 0.7
-            0,    // undefined
-            -1,   // -1
-            0,    // -0
-            0,    // -0.1
-            -1,   // -1.1
-            0,    // NaN
-            -127, // -127
-            -128, // -128
-            1,    // -32767
-            0,    // -32768
-            1,    // -2147483647
-            0,    // -2147483648
-            1,    // -255
-            0,    // -256
-            1,    // -65535
-            0,    // -65536
-            1,    // -4294967295
-            0,    // -4294967296
-            0,    // Infinity
-            0,    // -Infinity
-            0
-        ],
-        Uint8: [
-            127, // 127
-            128, // 128
-            255, // 32767
-            0,   // 32768
-            255, // 2147483647
-            0,   // 2147483648
-            255, // 255
-            0,   // 256
-            255, // 65535
-            0,   // 65536
-            255, // 4294967295
-            0,   // 4294967296
-            255, // 9007199254740991
-            0,   // 9007199254740992
-            1,   // 1.1
-            0,   // 0.1
-            0,   // 0.5
-            0,   // 0.50000001,
-            0,   // 0.6
-            0,   // 0.7
-            0,   // undefined
-            255, // -1
-            0,   // -0
-            0,   // -0.1
-            255, // -1.1
-            0,   // NaN
-            129, // -127
-            128, // -128
-            1,   // -32767
-            0,   // -32768
-            1,   // -2147483647
-            0,   // -2147483648
-            1,   // -255
-            0,   // -256
-            1,   // -65535
-            0,   // -65536
-            1,   // -4294967295
-            0,   // -4294967296
-            0,   // Infinity
-            0,   // -Infinity
-            0
-        ],
-        Uint8Clamped: [
-            127, // 127
-            128, // 128
-            255, // 32767
-            255, // 32768
-            255, // 2147483647
-            255, // 2147483648
-            255, // 255
-            255, // 256
-            255, // 65535
-            255, // 65536
-            255, // 4294967295
-            255, // 4294967296
-            255, // 9007199254740991
-            255, // 9007199254740992
-            1,   // 1.1,
-            0,   // 0.1
-            0,   // 0.5
-            1,   // 0.50000001,
-            1,   // 0.6
-            1,   // 0.7
-            0,   // undefined
-            0,   // -1
-            0,   // -0
-            0,   // -0.1
-            0,   // -1.1
-            0,   // NaN
-            0,   // -127
-            0,   // -128
-            0,   // -32767
-            0,   // -32768
-            0,   // -2147483647
-            0,   // -2147483648
-            0,   // -255
-            0,   // -256
-            0,   // -65535
-            0,   // -65536
-            0,   // -4294967295
-            0,   // -4294967296
-            255, // Infinity
-            0,   // -Infinity
-            0
-        ],
-        Int16: [
-            127,    // 127
-            128,    // 128
-            32767,  // 32767
-            -32768, // 32768
-            -1,     // 2147483647
-            0,      // 2147483648
-            255,    // 255
-            256,    // 256
-            -1,     // 65535
-            0,      // 65536
-            -1,     // 4294967295
-            0,      // 4294967296
-            -1,     // 9007199254740991
-            0,      // 9007199254740992
-            1,      // 1.1
-            0,      // 0.1
-            0,      // 0.5
-            0,      // 0.50000001,
-            0,      // 0.6
-            0,      // 0.7
-            0,      // undefined
-            -1,     // -1
-            0,      // -0
-            0,      // -0.1
-            -1,     // -1.1
-            0,      // NaN
-            -127,   // -127
-            -128,   // -128
-            -32767, // -32767
-            -32768, // -32768
-            1,      // -2147483647
-            0,      // -2147483648
-            -255,   // -255
-            -256,   // -256
-            1,      // -65535
-            0,      // -65536
-            1,      // -4294967295
-            0,      // -4294967296
-            0,      // Infinity
-            0,      // -Infinity
-            0
-        ],
-        Uint16: [
-            127,   // 127
-            128,   // 128
-            32767, // 32767
-            32768, // 32768
-            65535, // 2147483647
-            0,     // 2147483648
-            255,   // 255
-            256,   // 256
-            65535, // 65535
-            0,     // 65536
-            65535, // 4294967295
-            0,     // 4294967296
-            65535, // 9007199254740991
-            0,     // 9007199254740992
-            1,     // 1.1
-            0,     // 0.1
-            0,     // 0.5
-            0,     // 0.50000001,
-            0,     // 0.6
-            0,     // 0.7
-            0,     // undefined
-            65535, // -1
-            0,     // -0
-            0,     // -0.1
-            65535, // -1.1
-            0,     // NaN
-            65409, // -127
-            65408, // -128
-            32769, // -32767
-            32768, // -32768
-            1,     // -2147483647
-            0,     // -2147483648
-            65281, // -255
-            65280, // -256
-            1,     // -65535
-            0,     // -65536
-            1,     // -4294967295
-            0,     // -4294967296
-            0,     // Infinity
-            0,     // -Infinity
-            0
-        ],
-        Int32: [
-            127,         // 127
-            128,         // 128
-            32767,       // 32767
-            32768,       // 32768
-            2147483647,  // 2147483647
-            -2147483648, // 2147483648
-            255,         // 255
-            256,         // 256
-            65535,       // 65535
-            65536,       // 65536
-            -1,          // 4294967295
-            0,           // 4294967296
-            -1,          // 9007199254740991
-            0,           // 9007199254740992
-            1,           // 1.1
-            0,           // 0.1
-            0,           // 0.5
-            0,           // 0.50000001,
-            0,           // 0.6
-            0,           // 0.7
-            0,           // undefined
-            -1,          // -1
-            0,           // -0
-            0,           // -0.1
-            -1,          // -1.1
-            0,           // NaN
-            -127,        // -127
-            -128,        // -128
-            -32767,      // -32767
-            -32768,      // -32768
-            -2147483647, // -2147483647
-            -2147483648, // -2147483648
-            -255,        // -255
-            -256,        // -256
-            -65535,      // -65535
-            -65536,      // -65536
-            1,           // -4294967295
-            0,           // -4294967296
-            0,           // Infinity
-            0,           // -Infinity
-            0
-        ],
-        Uint32: [
-            127,        // 127
-            128,        // 128
-            32767,      // 32767
-            32768,      // 32768
-            2147483647, // 2147483647
-            2147483648, // 2147483648
-            255,        // 255
-            256,        // 256
-            65535,      // 65535
-            65536,      // 65536
-            4294967295, // 4294967295
-            0,          // 4294967296
-            4294967295, // 9007199254740991
-            0,          // 9007199254740992
-            1,          // 1.1
-            0,          // 0.1
-            0,          // 0.5
-            0,          // 0.50000001,
-            0,          // 0.6
-            0,          // 0.7
-            0,          // undefined
-            4294967295, // -1
-            0,          // -0
-            0,          // -0.1
-            4294967295, // -1.1
-            0,          // NaN
-            4294967169, // -127
-            4294967168, // -128
-            4294934529, // -32767
-            4294934528, // -32768
-            2147483649, // -2147483647
-            2147483648, // -2147483648
-            4294967041, // -255
-            4294967040, // -256
-            4294901761, // -65535
-            4294901760, // -65536
-            1,          // -4294967295
-            0,          // -4294967296
-            0,          // Infinity
-            0,          // -Infinity
-            0
-        ],
-        Float32: [
-            127,                  // 127
-            128,                  // 128
-            32767,                // 32767
-            32768,                // 32768
-            2147483648,           // 2147483647
-            2147483648,           // 2147483648
-            255,                  // 255
-            256,                  // 256
-            65535,                // 65535
-            65536,                // 65536
-            4294967296,           // 4294967295
-            4294967296,           // 4294967296
-            9007199254740992,     // 9007199254740991
-            9007199254740992,     // 9007199254740992
-            1.100000023841858,    // 1.1
-            0.10000000149011612,  // 0.1
-            0.5,                  // 0.5
-            0.5,                  // 0.50000001,
-            0.6000000238418579,   // 0.6
-            0.699999988079071,    // 0.7
-            NaN,                  // undefined
-            -1,                   // -1
-            -0,                   // -0
-            -0.10000000149011612, // -0.1
-            -1.100000023841858,   // -1.1
-            NaN,                  // NaN
-            -127,                 // -127
-            -128,                 // -128
-            -32767,               // -32767
-            -32768,               // -32768
-            -2147483648,          // -2147483647
-            -2147483648,          // -2147483648
-            -255,                 // -255
-            -256,                 // -256
-            -65535,               // -65535
-            -65536,               // -65536
-            -4294967296,          // -4294967295
-            -4294967296,          // -4294967296
-            Infinity,             // Infinity
-            -Infinity,            // -Infinity
-            0
-        ],
-        Float64: [
-            127,         // 127
-            128,         // 128
-            32767,       // 32767
-            32768,       // 32768
-            2147483647,  // 2147483647
-            2147483648,  // 2147483648
-            255,         // 255
-            256,         // 256
-            65535,       // 65535
-            65536,       // 65536
-            4294967295,  // 4294967295
-            4294967296,  // 4294967296
-            9007199254740991, // 9007199254740991
-            9007199254740992, // 9007199254740992
-            1.1,         // 1.1
-            0.1,         // 0.1
-            0.5,         // 0.5
-            0.50000001,  // 0.50000001,
-            0.6,         // 0.6
-            0.7,         // 0.7
-            NaN,         // undefined
-            -1,          // -1
-            -0,          // -0
-            -0.1,        // -0.1
-            -1.1,        // -1.1
-            NaN,         // NaN
-            -127,        // -127
-            -128,        // -128
-            -32767,      // -32767
-            -32768,      // -32768
-            -2147483647, // -2147483647
-            -2147483648, // -2147483648
-            -255,        // -255
-            -256,        // -256
-            -65535,      // -65535
-            -65536,      // -65536
-            -4294967295, // -4294967295
-            -4294967296, // -4294967296
-            Infinity,    // Infinity
-            -Infinity,   // -Infinity
-            0
-        ]
-    }
+  expected: {
+    Int8: [
+      127,  // 127
+      -128, // 128
+      -1,   // 32767
+      0,    // 32768
+      -1,   // 2147483647
+      0,    // 2147483648
+      -1,   // 255
+      0,    // 256
+      -1,   // 65535
+      0,    // 65536
+      -1,   // 4294967295
+      0,    // 4294967296
+      -1,   // 9007199254740991
+      0,    // 9007199254740992
+      1,    // 1.1
+      0,    // 0.1
+      0,    // 0.5
+      0,    // 0.50000001,
+      0,    // 0.6
+      0,    // 0.7
+      0,    // undefined
+      -1,   // -1
+      0,    // -0
+      0,    // -0.1
+      -1,   // -1.1
+      0,    // NaN
+      -127, // -127
+      -128, // -128
+      1,    // -32767
+      0,    // -32768
+      1,    // -2147483647
+      0,    // -2147483648
+      1,    // -255
+      0,    // -256
+      1,    // -65535
+      0,    // -65536
+      1,    // -4294967295
+      0,    // -4294967296
+      0,    // Infinity
+      0,    // -Infinity
+      0
+    ],
+    Uint8: [
+      127, // 127
+      128, // 128
+      255, // 32767
+      0,   // 32768
+      255, // 2147483647
+      0,   // 2147483648
+      255, // 255
+      0,   // 256
+      255, // 65535
+      0,   // 65536
+      255, // 4294967295
+      0,   // 4294967296
+      255, // 9007199254740991
+      0,   // 9007199254740992
+      1,   // 1.1
+      0,   // 0.1
+      0,   // 0.5
+      0,   // 0.50000001,
+      0,   // 0.6
+      0,   // 0.7
+      0,   // undefined
+      255, // -1
+      0,   // -0
+      0,   // -0.1
+      255, // -1.1
+      0,   // NaN
+      129, // -127
+      128, // -128
+      1,   // -32767
+      0,   // -32768
+      1,   // -2147483647
+      0,   // -2147483648
+      1,   // -255
+      0,   // -256
+      1,   // -65535
+      0,   // -65536
+      1,   // -4294967295
+      0,   // -4294967296
+      0,   // Infinity
+      0,   // -Infinity
+      0
+    ],
+    Uint8Clamped: [
+      127, // 127
+      128, // 128
+      255, // 32767
+      255, // 32768
+      255, // 2147483647
+      255, // 2147483648
+      255, // 255
+      255, // 256
+      255, // 65535
+      255, // 65536
+      255, // 4294967295
+      255, // 4294967296
+      255, // 9007199254740991
+      255, // 9007199254740992
+      1,   // 1.1,
+      0,   // 0.1
+      0,   // 0.5
+      1,   // 0.50000001,
+      1,   // 0.6
+      1,   // 0.7
+      0,   // undefined
+      0,   // -1
+      0,   // -0
+      0,   // -0.1
+      0,   // -1.1
+      0,   // NaN
+      0,   // -127
+      0,   // -128
+      0,   // -32767
+      0,   // -32768
+      0,   // -2147483647
+      0,   // -2147483648
+      0,   // -255
+      0,   // -256
+      0,   // -65535
+      0,   // -65536
+      0,   // -4294967295
+      0,   // -4294967296
+      255, // Infinity
+      0,   // -Infinity
+      0
+    ],
+    Int16: [
+      127,    // 127
+      128,    // 128
+      32767,  // 32767
+      -32768, // 32768
+      -1,     // 2147483647
+      0,      // 2147483648
+      255,    // 255
+      256,    // 256
+      -1,     // 65535
+      0,      // 65536
+      -1,     // 4294967295
+      0,      // 4294967296
+      -1,     // 9007199254740991
+      0,      // 9007199254740992
+      1,      // 1.1
+      0,      // 0.1
+      0,      // 0.5
+      0,      // 0.50000001,
+      0,      // 0.6
+      0,      // 0.7
+      0,      // undefined
+      -1,     // -1
+      0,      // -0
+      0,      // -0.1
+      -1,     // -1.1
+      0,      // NaN
+      -127,   // -127
+      -128,   // -128
+      -32767, // -32767
+      -32768, // -32768
+      1,      // -2147483647
+      0,      // -2147483648
+      -255,   // -255
+      -256,   // -256
+      1,      // -65535
+      0,      // -65536
+      1,      // -4294967295
+      0,      // -4294967296
+      0,      // Infinity
+      0,      // -Infinity
+      0
+    ],
+    Uint16: [
+      127,   // 127
+      128,   // 128
+      32767, // 32767
+      32768, // 32768
+      65535, // 2147483647
+      0,     // 2147483648
+      255,   // 255
+      256,   // 256
+      65535, // 65535
+      0,     // 65536
+      65535, // 4294967295
+      0,     // 4294967296
+      65535, // 9007199254740991
+      0,     // 9007199254740992
+      1,     // 1.1
+      0,     // 0.1
+      0,     // 0.5
+      0,     // 0.50000001,
+      0,     // 0.6
+      0,     // 0.7
+      0,     // undefined
+      65535, // -1
+      0,     // -0
+      0,     // -0.1
+      65535, // -1.1
+      0,     // NaN
+      65409, // -127
+      65408, // -128
+      32769, // -32767
+      32768, // -32768
+      1,     // -2147483647
+      0,     // -2147483648
+      65281, // -255
+      65280, // -256
+      1,     // -65535
+      0,     // -65536
+      1,     // -4294967295
+      0,     // -4294967296
+      0,     // Infinity
+      0,     // -Infinity
+      0
+    ],
+    Int32: [
+      127,         // 127
+      128,         // 128
+      32767,       // 32767
+      32768,       // 32768
+      2147483647,  // 2147483647
+      -2147483648, // 2147483648
+      255,         // 255
+      256,         // 256
+      65535,       // 65535
+      65536,       // 65536
+      -1,          // 4294967295
+      0,           // 4294967296
+      -1,          // 9007199254740991
+      0,           // 9007199254740992
+      1,           // 1.1
+      0,           // 0.1
+      0,           // 0.5
+      0,           // 0.50000001,
+      0,           // 0.6
+      0,           // 0.7
+      0,           // undefined
+      -1,          // -1
+      0,           // -0
+      0,           // -0.1
+      -1,          // -1.1
+      0,           // NaN
+      -127,        // -127
+      -128,        // -128
+      -32767,      // -32767
+      -32768,      // -32768
+      -2147483647, // -2147483647
+      -2147483648, // -2147483648
+      -255,        // -255
+      -256,        // -256
+      -65535,      // -65535
+      -65536,      // -65536
+      1,           // -4294967295
+      0,           // -4294967296
+      0,           // Infinity
+      0,           // -Infinity
+      0
+    ],
+    Uint32: [
+      127,        // 127
+      128,        // 128
+      32767,      // 32767
+      32768,      // 32768
+      2147483647, // 2147483647
+      2147483648, // 2147483648
+      255,        // 255
+      256,        // 256
+      65535,      // 65535
+      65536,      // 65536
+      4294967295, // 4294967295
+      0,          // 4294967296
+      4294967295, // 9007199254740991
+      0,          // 9007199254740992
+      1,          // 1.1
+      0,          // 0.1
+      0,          // 0.5
+      0,          // 0.50000001,
+      0,          // 0.6
+      0,          // 0.7
+      0,          // undefined
+      4294967295, // -1
+      0,          // -0
+      0,          // -0.1
+      4294967295, // -1.1
+      0,          // NaN
+      4294967169, // -127
+      4294967168, // -128
+      4294934529, // -32767
+      4294934528, // -32768
+      2147483649, // -2147483647
+      2147483648, // -2147483648
+      4294967041, // -255
+      4294967040, // -256
+      4294901761, // -65535
+      4294901760, // -65536
+      1,          // -4294967295
+      0,          // -4294967296
+      0,          // Infinity
+      0,          // -Infinity
+      0
+    ],
+    Float32: [
+      127,                  // 127
+      128,                  // 128
+      32767,                // 32767
+      32768,                // 32768
+      2147483648,           // 2147483647
+      2147483648,           // 2147483648
+      255,                  // 255
+      256,                  // 256
+      65535,                // 65535
+      65536,                // 65536
+      4294967296,           // 4294967295
+      4294967296,           // 4294967296
+      9007199254740992,     // 9007199254740991
+      9007199254740992,     // 9007199254740992
+      1.100000023841858,    // 1.1
+      0.10000000149011612,  // 0.1
+      0.5,                  // 0.5
+      0.5,                  // 0.50000001,
+      0.6000000238418579,   // 0.6
+      0.699999988079071,    // 0.7
+      NaN,                  // undefined
+      -1,                   // -1
+      -0,                   // -0
+      -0.10000000149011612, // -0.1
+      -1.100000023841858,   // -1.1
+      NaN,                  // NaN
+      -127,                 // -127
+      -128,                 // -128
+      -32767,               // -32767
+      -32768,               // -32768
+      -2147483648,          // -2147483647
+      -2147483648,          // -2147483648
+      -255,                 // -255
+      -256,                 // -256
+      -65535,               // -65535
+      -65536,               // -65536
+      -4294967296,          // -4294967295
+      -4294967296,          // -4294967296
+      Infinity,             // Infinity
+      -Infinity,            // -Infinity
+      0
+    ],
+    Float64: [
+      127,         // 127
+      128,         // 128
+      32767,       // 32767
+      32768,       // 32768
+      2147483647,  // 2147483647
+      2147483648,  // 2147483648
+      255,         // 255
+      256,         // 256
+      65535,       // 65535
+      65536,       // 65536
+      4294967295,  // 4294967295
+      4294967296,  // 4294967296
+      9007199254740991, // 9007199254740991
+      9007199254740992, // 9007199254740992
+      1.1,         // 1.1
+      0.1,         // 0.1
+      0.5,         // 0.5
+      0.50000001,  // 0.50000001,
+      0.6,         // 0.6
+      0.7,         // 0.7
+      NaN,         // undefined
+      -1,          // -1
+      -0,          // -0
+      -0.1,        // -0.1
+      -1.1,        // -1.1
+      NaN,         // NaN
+      -127,        // -127
+      -128,        // -128
+      -32767,      // -32767
+      -32768,      // -32768
+      -2147483647, // -2147483647
+      -2147483648, // -2147483648
+      -255,        // -255
+      -256,        // -256
+      -65535,      // -65535
+      -65536,      // -65536
+      -4294967295, // -4294967295
+      -4294967296, // -4294967296
+      Infinity,    // Infinity
+      -Infinity,   // -Infinity
+      0
+    ]
+  }
 };
 
 // Copyright (C) 2016 Jordan Harband.  All rights reserved.
@@ -1028,26 +1027,26 @@ defines: [allowProxyTraps]
 ---*/
 
 function allowProxyTraps(overrides) {
-    function throwTest262Error(msg) {
-        return function () { throw new Test262Error(msg); };
-    }
-    if (!overrides) { overrides = {}; }
-    return {
-        getPrototypeOf: overrides.getPrototypeOf || throwTest262Error('[[GetPrototypeOf]] trap called'),
-        setPrototypeOf: overrides.setPrototypeOf || throwTest262Error('[[SetPrototypeOf]] trap called'),
-        isExtensible: overrides.isExtensible || throwTest262Error('[[IsExtensible]] trap called'),
-        preventExtensions: overrides.preventExtensions || throwTest262Error('[[PreventExtensions]] trap called'),
-        getOwnPropertyDescriptor: overrides.getOwnPropertyDescriptor || throwTest262Error('[[GetOwnProperty]] trap called'),
-        has: overrides.has || throwTest262Error('[[HasProperty]] trap called'),
-        get: overrides.get || throwTest262Error('[[Get]] trap called'),
-        set: overrides.set || throwTest262Error('[[Set]] trap called'),
-        deleteProperty: overrides.deleteProperty || throwTest262Error('[[Delete]] trap called'),
-        defineProperty: overrides.defineProperty || throwTest262Error('[[DefineOwnProperty]] trap called'),
-        enumerate: throwTest262Error('[[Enumerate]] trap called: this trap has been removed'),
-        ownKeys: overrides.ownKeys || throwTest262Error('[[OwnPropertyKeys]] trap called'),
-        apply: overrides.apply || throwTest262Error('[[Call]] trap called'),
-        construct: overrides.construct || throwTest262Error('[[Construct]] trap called')
-    };
+  function throwTest262Error(msg) {
+    return function() { throw new Test262Error(msg); };
+  }
+  if (!overrides) { overrides = {}; }
+  return {
+    getPrototypeOf: overrides.getPrototypeOf || throwTest262Error('[[GetPrototypeOf]] trap called'),
+    setPrototypeOf: overrides.setPrototypeOf || throwTest262Error('[[SetPrototypeOf]] trap called'),
+    isExtensible: overrides.isExtensible || throwTest262Error('[[IsExtensible]] trap called'),
+    preventExtensions: overrides.preventExtensions || throwTest262Error('[[PreventExtensions]] trap called'),
+    getOwnPropertyDescriptor: overrides.getOwnPropertyDescriptor || throwTest262Error('[[GetOwnProperty]] trap called'),
+    has: overrides.has || throwTest262Error('[[HasProperty]] trap called'),
+    get: overrides.get || throwTest262Error('[[Get]] trap called'),
+    set: overrides.set || throwTest262Error('[[Set]] trap called'),
+    deleteProperty: overrides.deleteProperty || throwTest262Error('[[Delete]] trap called'),
+    defineProperty: overrides.defineProperty || throwTest262Error('[[DefineOwnProperty]] trap called'),
+    enumerate: throwTest262Error('[[Enumerate]] trap called: this trap has been removed'),
+    ownKeys: overrides.ownKeys || throwTest262Error('[[OwnPropertyKeys]] trap called'),
+    apply: overrides.apply || throwTest262Error('[[Call]] trap called'),
+    construct: overrides.construct || throwTest262Error('[[Construct]] trap called')
+  };
 }
 
 // Copyright (C) 2017 Ecma International.  All rights reserved.
@@ -1058,19 +1057,19 @@ defines: [$DONE]
 ---*/
 
 function __consolePrintHandle__(msg) {
-    print(msg);
+  print(msg);
 }
 
 function $DONE(error) {
-    if (error) {
-        if(typeof error === 'object' && error !== null && 'name' in error) {
-        __consolePrintHandle__('Test262:AsyncTestFailure:' + error.name + ': ' + error.message);
-        } else {
-        __consolePrintHandle__('Test262:AsyncTestFailure:Test262Error: ' + error);
-        }
+  if (error) {
+    if (typeof error === 'object' && error !== null && 'name' in error) {
+      __consolePrintHandle__('Test262:AsyncTestFailure:' + error.name + ': ' + error.message);
     } else {
-        __consolePrintHandle__('Test262:AsyncTestComplete');
+      __consolePrintHandle__('Test262:AsyncTestFailure:Test262Error: ' + error);
     }
+  } else {
+    __consolePrintHandle__('Test262:AsyncTestComplete');
+  }
 }
 
 // Copyright (C) 2017 Ecma International.  All rights reserved.
@@ -1085,66 +1084,66 @@ defines: [checkSequence, checkSettledPromises]
 ---*/
 
 function checkSequence(arr, message) {
-    arr.forEach(function(e, i) {
-      if (e !== (i+1)) {
-        throw new Test262Error((message ? message : "Steps in unexpected sequence:") +
-               " '" + arr.join(',') + "'");
-      }
-    });
-  
-    return true;
+  arr.forEach(function(e, i) {
+    if (e !== (i + 1)) {
+      throw new Test262Error((message ? message : "Steps in unexpected sequence:") +
+        " '" + arr.join(',') + "'");
+    }
+  });
+
+  return true;
 }
-  
+
 function checkSettledPromises(settleds, expected, message) {
-    const prefix = message ? `${message}: ` : '';
-  
-    assert.sameValue(Array.isArray(settleds), true, `${prefix}Settled values is an array`);
-  
+  const prefix = message ? `${message}: ` : '';
+
+  assert.sameValue(Array.isArray(settleds), true, `${prefix}Settled values is an array`);
+
+  assert.sameValue(
+    settleds.length,
+    expected.length,
+    `${prefix}The settled values has a different length than expected`
+  );
+
+  settleds.forEach((settled, i) => {
     assert.sameValue(
-        settleds.length,
-        expected.length,
-        `${prefix}The settled values has a different length than expected`
+      Object.prototype.hasOwnProperty.call(settled, 'status'),
+      true,
+      `${prefix}The settled value has a property status`
     );
-  
-    settleds.forEach((settled, i) => {
-        assert.sameValue(
-            Object.prototype.hasOwnProperty.call(settled, 'status'),
-            true,
-            `${prefix}The settled value has a property status`
-        );
-    
-        assert.sameValue(settled.status, expected[i].status, `${prefix}status for item ${i}`);
-    
-        if (settled.status === 'fulfilled') {
-            assert.sameValue(
-                Object.prototype.hasOwnProperty.call(settled, 'value'),
-                true,
-                `${prefix}The fulfilled promise has a property named value`
-            );
-    
-            assert.sameValue(
-                Object.prototype.hasOwnProperty.call(settled, 'reason'),
-                false,
-                `${prefix}The fulfilled promise has no property named reason`
-            );
-    
-            assert.sameValue(settled.value, expected[i].value, `${prefix}value for item ${i}`);
-        } else {
-            assert.sameValue(settled.status, 'rejected', `${prefix}Valid statuses are only fulfilled or rejected`);
-    
-            assert.sameValue(
-                Object.prototype.hasOwnProperty.call(settled, 'value'),
-                false,
-                `${prefix}The fulfilled promise has no property named value`
-            );
-    
-            assert.sameValue(
-                Object.prototype.hasOwnProperty.call(settled, 'reason'),
-                true,
-                `${prefix}The fulfilled promise has a property named reason`
-            );
-    
-            assert.sameValue(settled.reason, expected[i].reason, `${prefix}Reason value for item ${i}`);
-        }
-    });
+
+    assert.sameValue(settled.status, expected[i].status, `${prefix}status for item ${i}`);
+
+    if (settled.status === 'fulfilled') {
+      assert.sameValue(
+        Object.prototype.hasOwnProperty.call(settled, 'value'),
+        true,
+        `${prefix}The fulfilled promise has a property named value`
+      );
+
+      assert.sameValue(
+        Object.prototype.hasOwnProperty.call(settled, 'reason'),
+        false,
+        `${prefix}The fulfilled promise has no property named reason`
+      );
+
+      assert.sameValue(settled.value, expected[i].value, `${prefix}value for item ${i}`);
+    } else {
+      assert.sameValue(settled.status, 'rejected', `${prefix}Valid statuses are only fulfilled or rejected`);
+
+      assert.sameValue(
+        Object.prototype.hasOwnProperty.call(settled, 'value'),
+        false,
+        `${prefix}The fulfilled promise has no property named value`
+      );
+
+      assert.sameValue(
+        Object.prototype.hasOwnProperty.call(settled, 'reason'),
+        true,
+        `${prefix}The fulfilled promise has a property named reason`
+      );
+
+      assert.sameValue(settled.reason, expected[i].reason, `${prefix}Reason value for item ${i}`);
+    }
+  });
 }
